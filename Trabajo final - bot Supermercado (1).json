@@ -1,0 +1,406 @@
+{
+  "name": "Trabajo final - bot Supermercado",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "senpai-recibir-mensaje",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -480,
+        -160
+      ],
+      "id": "1a65b465-a974-4e48-b13a-309bae7a356f",
+      "name": "Webhook",
+      "webhookId": "b15446e2-beef-465c-8bdf-5557cd1183da"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.data.messageType }}",
+                    "rightValue": "conversation",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "e4d3ecb3-2105-44f8-a62d-92096d75e91f"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "mensaje"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "fd1041d8-9475-421a-a768-bb344720aca0",
+                    "leftValue": "={{ $json.body.data.messageType }}",
+                    "rightValue": "imageMessage",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "imagen"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "49045d0d-84b8-49cc-bbd8-2679daf6b0f1",
+                    "leftValue": "={{ $json.body.data.messageType }}",
+                    "rightValue": "audioMessage",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "audio"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -192,
+        -176
+      ],
+      "id": "b6eb0fbf-b235-49b9-940a-4600a425f4b9",
+      "name": "verifica que tipo de mensaje es"
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "={{ $json.body.instance }}",
+        "remoteJid": "={{ $json.body.data.key.remoteJid }}",
+        "messageText": "Qué tal, por el momento no puedo escuchar tus audios, soy un bot en aprendizaje continuo 😅. ",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        -192,
+        112
+      ],
+      "id": "d3f038b6-8b41-4efa-bb0e-e56380eb2b05",
+      "name": "responde que no escucha audios",
+      "credentials": {
+        "evolutionApi": {
+          "id": "8kXdINgBBedgFrXR",
+          "name": "Supermercado cel"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "Senpai-mensaje",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "celular",
+              "fieldValue": "={{ $json.body.data.key.remoteJid }}"
+            },
+            {
+              "fieldId": "mensaje",
+              "fieldValue": "={{ $json.body.data.message.conversation }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -416,
+        528
+      ],
+      "id": "4d38725d-757e-4d6b-a098-073220377d22",
+      "name": "guardar mensaje",
+      "credentials": {
+        "supabaseApi": {
+          "id": "1gCaTJXCnZsLZ60R",
+          "name": "senpai proyecto"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "Senpai-mensaje",
+        "limit": 5,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "celular",
+              "condition": "eq",
+              "keyValue": "={{ $('Webhook').item.json.body.data.key.remoteJid }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -256,
+        528
+      ],
+      "id": "b50710e3-7bbe-43f0-acc5-fa6cac82f3ac",
+      "name": "consulto los mensajes del celular",
+      "credentials": {
+        "supabaseApi": {
+          "id": "1gCaTJXCnZsLZ60R",
+          "name": "senpai proyecto"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        -304
+      ],
+      "id": "21ce5194-bc4b-423a-89e3-e07d0cfa69a2",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        608,
+        -48
+      ],
+      "id": "a34442e6-e9b3-437c-90e0-1dd615391e08",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        416,
+        -48
+      ],
+      "id": "ce8d59dd-01a7-484a-9b63-f0ea14004699",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "u5jMdRgz3yHOHRXR",
+          "name": "Openai n8n nuevo"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Chatbot atención al cliente de Supermercado",
+        "height": 192,
+        "width": 592
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -592,
+        -416
+      ],
+      "typeVersion": 1,
+      "id": "a01474e9-096e-410e-8291-4bcc908d469a",
+      "name": "Sticky Note"
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "accept": "application/json, text/plain, */*",
+            "content-type": "application/json",
+            "user-agent": "axios/1.10.0",
+            "content-length": "947",
+            "accept-encoding": "gzip, compress, deflate, br",
+            "host": "fateservicios.com:5678",
+            "connection": "keep-alive"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "event": "messages.upsert",
+            "instance": "dani",
+            "data": {
+              "key": {
+                "remoteJid": "59893747642@s.whatsapp.net",
+                "fromMe": false,
+                "id": "3AB031E1761942333500",
+                "senderLid": "273602318483506@lid"
+              },
+              "pushName": "Majo",
+              "status": "DELIVERY_ACK",
+              "message": {
+                "conversation": "Que horario hacen",
+                "messageContextInfo": {
+                  "deviceListMetadata": {
+                    "senderKeyHash": "axVt73p5LruUcg==",
+                    "senderTimestamp": "1757892482",
+                    "recipientKeyHash": "OZSmLINVZyg06Q==",
+                    "recipientTimestamp": "1757958291"
+                  },
+                  "deviceListMetadataVersion": 2,
+                  "messageSecret": "ybqab90Qlie4E2NA8XdhoKx/pS57Bb6L7jnDAIAY5kw="
+                }
+              },
+              "messageType": "conversation",
+              "messageTimestamp": 1758843649,
+              "instanceId": "725abe0e-912d-445e-b7bf-cf23e39e4627",
+              "source": "ios"
+            },
+            "destination": "https://fateservicios.com:5678/webhook-test/senpai-recibir-mensaje",
+            "date_time": "2025-09-25T20:40:50.200Z",
+            "sender": "59892456118@s.whatsapp.net",
+            "server_url": "https://evolution-api-production-3211.up.railway.app",
+            "apikey": "CBD5AE0017A0-4DD1-8556-92797FCA6830"
+          },
+          "webhookUrl": "https://fateservicios.com:5678/webhook-test/senpai-recibir-mensaje",
+          "executionMode": "test"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "verifica que tipo de mensaje es",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "verifica que tipo de mensaje es": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [],
+        [
+          {
+            "node": "responde que no escucha audios",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "guardar mensaje": {
+      "main": [
+        [
+          {
+            "node": "consulto los mensajes del celular",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "consulto los mensajes del celular": {
+      "main": [
+        []
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "f2d00aa8-e205-4ce8-8575-0c59ccc9419e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "355dbb97fb96cce5be66d50423cc3dcbfd1d8447663c298d2e93b174efcc4552"
+  },
+  "id": "tqyr5LBX1IRWFOSM",
+  "tags": []
+}
